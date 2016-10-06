@@ -36,6 +36,7 @@ const std::vector<const GeometricSearchDet*>& Phase2OTEndcapLayer::components() 
 
 void
 Phase2OTEndcapLayer::fillRingPars(int i) {
+  std::cout << "theRingSize in fillRingPars " << theRingSize << " i = " << i << std::endl;
   const BoundDisk& ringDisk = static_cast<const BoundDisk&>(theComps[i]->surface());
   float ringMinZ = std::abs( ringDisk.position().z()) - ringDisk.bounds().thickness()/2.;
   float ringMaxZ = std::abs( ringDisk.position().z()) + ringDisk.bounds().thickness()/2.; 
@@ -43,6 +44,7 @@ Phase2OTEndcapLayer::fillRingPars(int i) {
   ringPars[i].thetaRingMax =  ringDisk.outerRadius()/ ringMinZ;
   ringPars[i].theRingR=( ringDisk.innerRadius() +
 			 ringDisk.outerRadius())/2.;
+  std::cout << " ringMinZ " <<  ringMinZ <<  " ringMaxZ " << ringMaxZ <<   " ringPars[i].theRingR " << ringPars[i].theRingR << std::endl;
 
 }
 
@@ -54,12 +56,20 @@ Phase2OTEndcapLayer::Phase2OTEndcapLayer(vector<const Phase2OTEndcapRing*>& ring
   //They should be already R-ordered. TO BE CHECKED!!
   //sort( theRings.begin(), theRings.end(), DetLessR());
 
-  if ( rings.size() != NOTECRINGS) throw DetLayerException("Number of rings in Phase2 OT EC layer is not equal to NOTECRINGS !!");
-  setSurface( computeDisk( rings ) );
+  //modified by Alessia
+  if ( rings.size() > NOTECRINGS) throw DetLayerException("Number of rings in Phase2 OT EC layer is not equal to NOTECRINGS !!");
 
-  for(int i=0; i!=NOTECRINGS; ++i) {
-    theComps[i]=rings[i];
-    fillRingPars(i);
+  std::cout<< "rings.size() " << rings.size() << "  NOTECRINGS "  << NOTECRINGS << std::endl;
+  theRingSize = rings.size();
+  std::cout << "0-theRingSize " << theRingSize << std::endl;
+  setSurface( computeDisk( rings ) );
+  int i;
+  for(int j=0; j!=NOTECRINGS; ++j) {
+    if(theRingSize < NOTECRINGS && j>= theRingSize) {
+      i = theRingSize-1; } else 
+      {i = j;}
+    theComps[j]=rings[i];
+    fillRingPars(j);
     theBasicComps.insert(theBasicComps.end(),	
 			 (*rings[i]).basicComponents().begin(),
 			 (*rings[i]).basicComponents().end());
@@ -73,12 +83,22 @@ Phase2OTEndcapLayer::Phase2OTEndcapLayer(vector<const Phase2OTEndcapRing*>& ring
 			  << this->specificSurface().bounds().thickness() << " , "
 			  << this->specificSurface().innerRadius() << " , "
 			  << this->specificSurface().outerRadius() ;
+
+  // ale
+  std::cout << "TkDetLayers ==== DEBUG Phase2OTEndcapLayer =====" << std::endl; 
+  std::cout << "TkDetLayers -- r,zed pos  , thickness, innerR, outerR: " 
+	    << this->position().perp() << " , "
+	    << this->position().z() << " , "
+	    << this->specificSurface().bounds().thickness() << " , "
+	    << this->specificSurface().innerRadius() << " , "
+	    << this->specificSurface().outerRadius() << std::endl;
 }
 
 
 BoundDisk* 
 Phase2OTEndcapLayer::computeDisk( const vector<const Phase2OTEndcapRing*>& rings) const
 {
+  std::cout << "theRingSize in computeDisk " << theRingSize << std::endl;
   float theRmin = rings.front()->specificSurface().innerRadius();
   float theRmax = rings.front()->specificSurface().outerRadius();
   float theZmin = rings.front()->position().z() -
@@ -251,6 +271,7 @@ Phase2OTEndcapLayer::ringIndicesByCrossingProximity(const TrajectoryStateOnSurfa
   GlobalPoint   ringCrossings[NOTECRINGS];
   // vector<GlobalVector>  ringXDirections;
 
+  std::cout << "theRingSize " << theRingSize << std::endl;
   for (int i = 0; i < NOTECRINGS ; i++ ) {
     const BoundDisk & theRing  = static_cast<const BoundDisk &>(theComps[i]->surface());
     pair<bool,double> pathlen = myXing.pathLength( theRing);
@@ -295,6 +316,7 @@ Phase2OTEndcapLayer::findThreeClosest(const GlobalPoint ringCrossing[NOTECRINGS]
   float rDiff0 = std::abs( ringCrossing[0].perp() - initialR);
   float rDiff1 = -1.;
   float rDiff2 = -1.;
+  std::cout << "2-theRingSize " << theRingSize << std::endl;
   for (int i = 1; i < NOTECRINGS ; i++){
     float ringR =  ringPars[i].theRingR;
     float testDiff = std::abs( ringCrossing[i].perp() - ringR);

@@ -64,7 +64,7 @@ class Phase2OTEndcapLayer final : public RingedForwardLayer {
   const Phase2OTEndcapRing* theComps[NOTECRINGS];
   struct RingPar { float theRingR, thetaRingMin, thetaRingMax;};
   RingPar ringPars[NOTECRINGS];
-
+  int theRingSize;
 };
 
 
