@@ -316,7 +316,6 @@ Phase2OTEndcapLayer::findThreeClosest(const GlobalPoint ringCrossing[NOTECRINGS]
   float rDiff0 = std::abs( ringCrossing[0].perp() - initialR);
   float rDiff1 = -1.;
   float rDiff2 = -1.;
-  std::cout << "2-theRingSize " << theRingSize << std::endl;
   for (int i = 1; i < NOTECRINGS ; i++){
     float ringR =  ringPars[i].theRingR;
     float testDiff = std::abs( ringCrossing[i].perp() - ringR);
