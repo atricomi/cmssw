@@ -22,6 +22,7 @@ typedef GeometricSearchDet::DetWithState DetWithState;
 const std::vector<const GeometricSearchDet*>& Phase2OTEndcapLayer::components() const{
   if (not theComponents) {
     auto temp = std::make_unique<std::vector<const GeometricSearchDet*>>();
+    std::cout << " hopefully never: theRingSize " << theRingSize << std::endl;
     temp->reserve(NOTECRINGS);
     for ( auto c: theComps) temp->push_back(c);
     std::vector<const GeometricSearchDet*>* expected = nullptr;
@@ -45,7 +46,6 @@ Phase2OTEndcapLayer::fillRingPars(int i) {
   ringPars[i].theRingR=( ringDisk.innerRadius() +
 			 ringDisk.outerRadius())/2.;
   std::cout << " ringMinZ " <<  ringMinZ <<  " ringMaxZ " << ringMaxZ <<   " ringPars[i].theRingR " << ringPars[i].theRingR << std::endl;
-
 }
 
 
@@ -63,13 +63,10 @@ Phase2OTEndcapLayer::Phase2OTEndcapLayer(vector<const Phase2OTEndcapRing*>& ring
   theRingSize = rings.size();
   std::cout << "0-theRingSize " << theRingSize << std::endl;
   setSurface( computeDisk( rings ) );
-  int i;
-  for(int j=0; j!=NOTECRINGS; ++j) {
-    if(theRingSize < NOTECRINGS && j>= theRingSize) {
-      i = theRingSize-1; } else 
-      {i = j;}
-    theComps[j]=rings[i];
-    fillRingPars(j);
+
+  for(int i=0; i!=theRingSize; ++i) {
+    theComps[i]=rings[i];
+    fillRingPars(i);
     theBasicComps.insert(theBasicComps.end(),	
 			 (*rings[i]).basicComponents().begin(),
 			 (*rings[i]).basicComponents().end());
@@ -144,6 +141,7 @@ Phase2OTEndcapLayer::groupedCompatibleDetsV( const TrajectoryStateOnSurface& sta
   std::array<int,3> const & ringIndices = ringIndicesByCrossingProximity(startingState,prop);
   if ( ringIndices[0]==-1 || ringIndices[1] ==-1 || ringIndices[2] == -1 ) {
     edm::LogError("TkDetLayers") << "TkRingedForwardLayer::groupedCompatibleDets : error in CrossingProximity";
+    std::cout << "TkRingedForwardLayer::groupedCompatibleDets : error in CrossingProximity" << std::endl;
     return;
   }
 
@@ -269,10 +267,14 @@ Phase2OTEndcapLayer::ringIndicesByCrossingProximity(const TrajectoryStateOnSurfa
   Crossing myXing(  startPos, startDir, rho, propDir );
 
   GlobalPoint   ringCrossings[NOTECRINGS];
+  // for (int  i = 0; i < NOTECRINGS ; i++ ) {
+  //     ringCrossings[i] = GlobalPoint( 0.,0.,0.);
+  // }
+  //  GlobalPoint   ringCrossings[theRingSize];
   // vector<GlobalVector>  ringXDirections;
 
   std::cout << "theRingSize " << theRingSize << std::endl;
-  for (int i = 0; i < NOTECRINGS ; i++ ) {
+  for (int i = 0; i < theRingSize ; i++ ) {
     const BoundDisk & theRing  = static_cast<const BoundDisk &>(theComps[i]->surface());
     pair<bool,double> pathlen = myXing.pathLength( theRing);
     if ( pathlen.first ) { 
@@ -314,11 +316,15 @@ Phase2OTEndcapLayer::findThreeClosest(const GlobalPoint ringCrossing[NOTECRINGS]
   theBins[0] = 0;
   float initialR =  ringPars[0].theRingR;
   float rDiff0 = std::abs( ringCrossing[0].perp() - initialR);
+  std::cout << " initial R " << initialR << "  rDiff0 " << rDiff0 << endl; 
   float rDiff1 = -1.;
   float rDiff2 = -1.;
-  for (int i = 1; i < NOTECRINGS ; i++){
+  std::cout << "2-theRingSize " << theRingSize << std::endl;
+  for (int i = 1; i < theRingSize ; i++){
     float ringR =  ringPars[i].theRingR;
+    std::cout << "ringR " << ringR << std::endl;
     float testDiff = std::abs( ringCrossing[i].perp() - ringR);
+    std::cout << "i " << i  << " ringCrossing[i] " << ringCrossing[i] << " testDiff  " << testDiff << std::endl;
     if ( testDiff<rDiff0 ) {
       rDiff2 = rDiff1;
       rDiff1 = rDiff0;
@@ -340,8 +346,9 @@ Phase2OTEndcapLayer::findThreeClosest(const GlobalPoint ringCrossing[NOTECRINGS]
       theBins[2] = i;
     } 
   }
-
+  std::cout<< " theBins " << theBins[0] << " " << theBins[1] << " " << theBins[2] << std::endl;
   return theBins;
+
 }
 
 bool
